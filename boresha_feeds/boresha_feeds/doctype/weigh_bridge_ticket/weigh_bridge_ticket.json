@@ -71,7 +71,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-10 17:03:08.274982",
+ "modified": "2025-01-11 10:34:18.528354",
  "modified_by": "Administrator",
  "module": "Boresha Feeds",
  "name": "Weigh Bridge Ticket",
@@ -94,5 +94,6 @@
  "sort_order": "DESC",
  "states": [],
  "title_field": "truck_registration_number",
- "track_changes": 1
+ "track_changes": 1,
+ "track_seen": 1
 }
