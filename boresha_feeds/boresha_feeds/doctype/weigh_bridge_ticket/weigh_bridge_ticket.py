@@ -15,3 +15,7 @@ class WeighBridgeTicket(Document):
 		self.name = f"{prefix}-{series_number}"
 
 	
+	def on_update(self):
+		if self.workflow_state == "Approved":
+			if not self.no_of_bags:
+				frappe.throw("No of bags is required to proceed.")

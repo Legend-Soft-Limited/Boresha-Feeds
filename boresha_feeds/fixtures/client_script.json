@@ -1,1 +1,13 @@
-[]
+[
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Purchase Receipt",
+  "enabled": 1,
+  "modified": "2025-01-12 23:28:58.364341",
+  "module": "Boresha Feeds",
+  "name": "Purchase Receipt",
+  "script": "frappe.ui.form.on('Purchase Receipt', {\n\trefresh(frm) {\n\t\t// your code here\n\t}\n})\n\nfrappe.ui.form.on('Purchase Receipt Item', {\n\tweight_per_bag(frm, cdt, cdn) {\n\t\tlet item = locals[cdt][cdn];\n\t\tlet no_of_bags = item.no_of_bags;\n\t\tif (no_of_bags) {\n\t\t\tfrappe.model.set_value(cdt, cdn, {\n\t\t\t\t'qty': no_of_bags * item.weight_per_bag,\n\t\t\t});\n\t\t}\n\t},\n\n\tno_of_bags(frm, cdt, cdn) {\n\t\tlet item = locals[cdt][cdn];\n\t\tlet weight_per_bag = item.weight_per_bag;\n\t\tif (weight_per_bag) {\n\t\t\tfrappe.model.set_value(cdt, cdn, {\n\t\t\t\t'qty': weight_per_bag * item.no_of_bags,\n\t\t\t});\n\t\t}\n\t}\n})",
+  "view": "Form"
+ }
+]

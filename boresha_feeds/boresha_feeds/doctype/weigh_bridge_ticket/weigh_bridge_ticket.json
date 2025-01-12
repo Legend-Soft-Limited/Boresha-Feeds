@@ -6,11 +6,27 @@
  "engine": "InnoDB",
  "field_order": [
   "posting_date",
+  "ticket_no",
+  "supplier",
   "truck_registration_number",
-  "total_weight",
+  "vehicle_type",
   "column_break_kxyk",
+  "driver_name",
+  "driver_id",
+  "material",
+  "no_of_bags",
+  "section_break_syxg",
+  "total_weight",
+  "column_break_xjnz",
+  "gross_time",
+  "section_break_6oji",
   "truck_weight",
+  "column_break_mm05",
+  "tare_time",
+  "section_break_sivg",
   "net_weight",
+  "column_break_op91",
+  "average_weight_per_bag",
   "amended_from"
  ],
  "fields": [
@@ -28,7 +44,7 @@
    "fieldname": "total_weight",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Total Weight (KG)",
+   "label": "Gross Weight (KG)",
    "precision": "2",
    "reqd": 1
   },
@@ -56,22 +72,112 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Truck Reg Number",
+   "label": "Vehicle No",
    "reqd": 1
   },
   {
    "fieldname": "truck_weight",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Truck Weight (KG)",
+   "label": "Tare Weight (KG)",
    "precision": "2",
    "reqd": 1
+  },
+  {
+   "fieldname": "ticket_no",
+   "fieldtype": "Data",
+   "label": "Ticket No",
+   "reqd": 1
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "vehicle_type",
+   "fieldtype": "Data",
+   "label": "Vehicle Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "driver_name",
+   "fieldtype": "Data",
+   "label": "Driver Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "material",
+   "fieldtype": "Link",
+   "label": "Material",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "driver_id",
+   "fieldtype": "Int",
+   "label": "Driver ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gross_time",
+   "fieldtype": "Datetime",
+   "label": "Gross Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tare_time",
+   "fieldtype": "Datetime",
+   "label": "Tare Time",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.workflow_state !== \"Draft\"",
+   "fieldname": "no_of_bags",
+   "fieldtype": "Int",
+   "label": "No of Bags (#)",
+   "mandatory_depends_on": "eval: doc.workflow_state == \"Pending Approval\""
+  },
+  {
+   "fieldname": "section_break_syxg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_xjnz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: doc.workflow_state !== \"Draft\"",
+   "fieldname": "average_weight_per_bag",
+   "fieldtype": "Float",
+   "label": "Average Weight per Bag (KG)",
+   "precision": "2",
+   "read_only": 1,
+   "width": "Bags"
+  },
+  {
+   "fieldname": "section_break_6oji",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_mm05",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_sivg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_op91",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-11 10:34:18.528354",
+ "modified": "2025-01-12 20:36:12.249955",
  "modified_by": "Administrator",
  "module": "Boresha Feeds",
  "name": "Weigh Bridge Ticket",
