@@ -8,6 +8,7 @@ from datetime import datetime
 
 
 class WeighBridgeTicket(Document):
+	
 	def autoname(self):
 		year = nowdate().split('-')[0]
 		prefix = f"WBT-{self.truck_registration_number}-{year}"
