@@ -84,5 +84,118 @@
   "workflow_data": null,
   "workflow_name": "Weigh Bridge Ticket",
   "workflow_state_field": "workflow_state"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow",
+  "document_type": "Purchase Receipt",
+  "is_active": 1,
+  "modified": "2025-01-14 16:51:38.886389",
+  "name": "Purchase Receipt",
+  "override_status": 0,
+  "send_email_alert": 0,
+  "states": [
+   {
+    "allow_edit": "Store Clerk",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Purchase Receipt",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "state": "Draft",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": null
+   },
+   {
+    "allow_edit": "Stock Manager",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Purchase Receipt",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "state": "Pending Store Manager Approval",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": null
+   },
+   {
+    "allow_edit": "System Admin",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Purchase Receipt",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "state": "Pending Admin Approval",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": null
+   },
+   {
+    "allow_edit": "System Admin",
+    "avoid_status_override": 0,
+    "doc_status": "1",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Purchase Receipt",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "state": "Approved",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": null
+   }
+  ],
+  "transitions": [
+   {
+    "action": "Forward to Store Manager",
+    "allow_self_approval": 1,
+    "allowed": "Store Clerk",
+    "condition": null,
+    "next_state": "Pending Store Manager Approval",
+    "parent": "Purchase Receipt",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "state": "Draft",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Forward to System Admin",
+    "allow_self_approval": 1,
+    "allowed": "Stock Manager",
+    "condition": null,
+    "next_state": "Pending Admin Approval",
+    "parent": "Purchase Receipt",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "state": "Pending Store Manager Approval",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Approve",
+    "allow_self_approval": 1,
+    "allowed": "System Admin",
+    "condition": null,
+    "next_state": "Approved",
+    "parent": "Purchase Receipt",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "state": "Pending Admin Approval",
+    "workflow_builder_id": null
+   }
+  ],
+  "workflow_data": null,
+  "workflow_name": "Purchase Receipt",
+  "workflow_state_field": "workflow_state"
  }
 ]
