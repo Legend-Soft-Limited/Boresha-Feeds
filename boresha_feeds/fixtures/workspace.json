@@ -12296,15 +12296,28 @@
   "is_hidden": 0,
   "label": "Weigh Bridge",
   "links": [],
-  "modified": "2025-01-10 17:10:48.053993",
-  "module": null,
+  "modified": "2025-01-14 11:18:04.222161",
+  "module": "Boresha Feeds",
   "name": "Weigh Bridge",
   "number_cards": [],
   "parent_page": "",
   "public": 1,
   "quick_lists": [],
   "restrict_to_domain": null,
-  "roles": [],
+  "roles": [
+   {
+    "parent": "Weigh Bridge",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "Stock Manager"
+   },
+   {
+    "parent": "Weigh Bridge",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "Weigh Bridge User"
+   }
+  ],
   "sequence_id": 28.0,
   "shortcuts": [
    {
@@ -12518,15 +12531,40 @@
     "type": "Link"
    }
   ],
-  "modified": "2025-01-10 17:18:14.967094",
-  "module": null,
+  "modified": "2025-01-14 11:18:47.956930",
+  "module": "Stock",
   "name": "Purchase & Procurement",
   "number_cards": [],
   "parent_page": "",
   "public": 1,
   "quick_lists": [],
   "restrict_to_domain": null,
-  "roles": [],
+  "roles": [
+   {
+    "parent": "Purchase & Procurement",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "System Manager"
+   },
+   {
+    "parent": "Purchase & Procurement",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "Stock Manager"
+   },
+   {
+    "parent": "Purchase & Procurement",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "Accounts Manager"
+   },
+   {
+    "parent": "Purchase & Procurement",
+    "parentfield": "roles",
+    "parenttype": "Workspace",
+    "role": "Accounts User"
+   }
+  ],
   "sequence_id": 29.0,
   "shortcuts": [],
   "title": "Purchase & Procurement"
