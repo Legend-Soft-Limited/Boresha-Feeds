@@ -55,7 +55,7 @@ def format_mobile_number(mobile):
     return mobile
 
 
-@frappe.whitelist( allow_guest=True )
+@frappe.whitelist( allow_guest=True, methods="POST" )
 def login(usr, pwd):
     try:
         login_manager = frappe.auth.LoginManager()
@@ -141,7 +141,7 @@ def get_raw_materials():
 
 
 
-@frappe.whitelist( methods="POST" )
+@frappe.whitelist( allow_guest=True, methods="POST" )
 def generate_otp(mobile_number):
     try:
         if frappe.db.exists("User", {"mobile_no": mobile_number}):
