@@ -21,6 +21,24 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2025-01-19 19:03:13.284718",
+  "name": "Pending Approval by Store Clerk",
+  "style": "",
+  "workflow_state_name": "Pending Approval by Store Clerk"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-01-19 19:03:22.527388",
+  "name": "Pending Approval by Store Manager",
+  "style": "",
+  "workflow_state_name": "Pending Approval by Store Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2025-01-14 16:51:14.587710",
   "name": "Pending Store Manager Approval",
   "style": "Info",

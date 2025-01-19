@@ -11,8 +11,8 @@ class WeighBridgeTicket(Document):
 	
 	def autoname(self):
 		year = nowdate().split('-')[0]
-		prefix = f"WBT-{self.truck_registration_number}-{year}"
-		series_number = getseries(prefix, 4)
+		prefix = f"WBT-{year}"
+		series_number = getseries(prefix, 5)
 		self.name = f"{prefix}-{series_number}"
 
 	

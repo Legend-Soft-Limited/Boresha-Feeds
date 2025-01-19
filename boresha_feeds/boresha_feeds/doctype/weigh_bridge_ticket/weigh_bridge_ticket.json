@@ -8,11 +8,14 @@
   "posting_date",
   "ticket_no",
   "supplier",
-  "truck_registration_number",
+  "internal_vehicle",
+  "external_vehicle_reg",
+  "internal_vehicle_reg",
   "vehicle_type",
   "column_break_kxyk",
   "driver_name",
-  "driver_id",
+  "drive_mobile_no",
+  "driver_identity_number",
   "material",
   "no_of_bags",
   "section_break_syxg",
@@ -44,7 +47,7 @@
    "fieldname": "total_weight",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Gross Weight (KG)",
+   "label": "First Weight (KG)",
    "precision": "2",
    "reqd": 1
   },
@@ -68,20 +71,10 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "truck_registration_number",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Vehicle No",
-   "reqd": 1
-  },
-  {
    "fieldname": "truck_weight",
    "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Tare Weight (KG)",
-   "precision": "2",
-   "reqd": 1
+   "label": "Second Weight (KG)",
+   "precision": "2"
   },
   {
    "fieldname": "ticket_no",
@@ -116,21 +109,15 @@
    "reqd": 1
   },
   {
-   "fieldname": "driver_id",
-   "fieldtype": "Int",
-   "label": "Driver ID",
-   "reqd": 1
-  },
-  {
    "fieldname": "gross_time",
    "fieldtype": "Datetime",
-   "label": "Gross Time",
+   "label": "First Weight Time",
    "read_only": 1
   },
   {
    "fieldname": "tare_time",
    "fieldtype": "Datetime",
-   "label": "Tare Time",
+   "label": "Second Weight Time",
    "read_only": 1
   },
   {
@@ -172,12 +159,47 @@
   {
    "fieldname": "column_break_op91",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "drive_mobile_no",
+   "fieldtype": "Data",
+   "label": "Drive Mobile No",
+   "options": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "internal_vehicle",
+   "fieldtype": "Select",
+   "label": "Internal Vehicle?",
+   "options": "\nYes\nNo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "driver_identity_number",
+   "fieldtype": "Int",
+   "label": "Driver ID / Driving Licence",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval: doc.internal_vehicle == \"No\"",
+   "fieldname": "external_vehicle_reg",
+   "fieldtype": "Data",
+   "label": "Vehicle No",
+   "mandatory_depends_on": "eval: doc.internal_vehicle == \"No\""
+  },
+  {
+   "depends_on": "eval: doc.internal_vehicle == \"Yes\"",
+   "fieldname": "internal_vehicle_reg",
+   "fieldtype": "Link",
+   "label": "Vehicle No",
+   "mandatory_depends_on": "eval: doc.internal_vehicle == \"Yes\"",
+   "options": "Vehicle"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-12 20:36:12.249955",
+ "modified": "2025-01-19 18:31:41.042993",
  "modified_by": "Administrator",
  "module": "Boresha Feeds",
  "name": "Weigh Bridge Ticket",
@@ -199,7 +221,7 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "title_field": "truck_registration_number",
+ "title_field": "supplier",
  "track_changes": 1,
  "track_seen": 1
 }
