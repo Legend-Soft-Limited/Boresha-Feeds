@@ -174,6 +174,7 @@ def send_opt(mobile_number):
     try:
         otp = random.randint(100000, 999999)
 
+
         one_time_password_doc = frappe.get_doc({
             "doctype": "One Time Password",
             "mobile_number": mobile_number,
