@@ -174,19 +174,19 @@ def send_opt(mobile_number):
     try:
         otp = random.randint(100000, 999999)
 
-        on_time_password_doc = frappe.get_doc({
+        one_time_password_doc = frappe.get_doc({
             "doctype": "One Time Password",
             "mobile_number": mobile_number,
             "one_time_password": otp
         })
-        on_time_password_doc.insert(ignore_mandatory= True, ignore_permissions= True)
+        one_time_password_doc.insert(ignore_mandatory= True, ignore_permissions= True)
         frappe.db.commit()
 
         message = (
-            f"Your OTP is {on_time_password_doc.on_time_password}."
+            f"Your OTP is {one_time_password_doc.one_time_password}."
         )
                     
-        if send_sms(on_time_password_doc.mobile_number, message):
+        if send_sms(one_time_password_doc.mobile_number, message):
             return {
                     'status': 200,
                     'message': f'OTP sent to {mobile_number}.',
