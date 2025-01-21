@@ -81,7 +81,8 @@ def login(usr, pwd):
         "api_secret":api_generate,
         "username":user.username,
         "email":user.email,
-        "base_url": frappe.utils.get_url()
+        "base_url": frappe.utils.get_url(),
+        "user_role": user.role_profile_name
     }
 
 def generate_keys(user):
@@ -313,6 +314,8 @@ def rest_password(**kwargs):
     try:
         usr = kwargs.get('usr')
         new_password = kwargs.get('new_password')
+        otp = kwargs.get('otp')
+
 
         if not usr or not new_password:
             return {'error': 'Missing required parameters: usr and new_password'}, 400
@@ -324,6 +327,10 @@ def rest_password(**kwargs):
 
         if not user:
             return {'error': 'User not found'}, 404
+        
+        if not validate_otp_exists(usr, otp):
+            return {'error': 'Invalid or expired OTP. Please try again.', 'status': 400}
+
       
         frappe.utils.password.update_password(user.name, new_password)
         frappe.delete_doc("One Time Password", usr)
@@ -335,3 +342,11 @@ def rest_password(**kwargs):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"Password Recovery Error: {str(e)}")
         return {'error': str(e)}, 500
+    
+
+def validate_otp_exists(usr, otp):
+    try:
+        return frappe.db.exists("One Time Password", {"name": usr, "one_time_password": otp})
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"Error in validate_otp_exists {str(e)}")
+        return False
