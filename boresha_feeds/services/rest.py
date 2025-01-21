@@ -305,3 +305,33 @@ def get_weigh_bridge_tickets():
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{e}")
         return {'error': str(e)}, 400
+    
+
+
+@frappe.whitelist(methods="POST")
+def rest_password(**kwargs):
+    try:
+        usr = kwargs.get('usr')
+        new_password = kwargs.get('new_password')
+
+        if not usr or not new_password:
+            return {'error': 'Missing required parameters: usr and new_password'}, 400
+
+        if "@" in usr and "." in usr:
+            user = frappe.get_doc("User", {"email": usr})
+        else:
+            user = frappe.get_doc("User", {"mobile_no": usr})
+
+        if not user:
+            return {'error': 'User not found'}, 404
+      
+        frappe.utils.password.update_password(user.name, new_password)
+        frappe.delete_doc("One Time Password", usr)
+        frappe.db.commit()
+        return {'status': 200, 'message': 'Password successfully recovered.'}
+
+    except frappe.DoesNotExistError:
+        return {'error': 'User does not exist'}, 404
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"Password Recovery Error: {str(e)}")
+        return {'error': str(e)}, 500
