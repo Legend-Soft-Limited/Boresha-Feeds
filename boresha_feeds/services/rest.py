@@ -73,17 +73,26 @@ def login(usr, pwd):
     api_generate = generate_keys(frappe.session.user)
     user = frappe.get_doc('User', frappe.session.user)
 
+    role_profile = user.role_profile_name
+
+    is_weighbridge = 1 if role_profile == "Weigh Bridge User" else 0
+    is_sales = 1 if role_profile == "Sales User" else 0
+    is_admin = 1 if role_profile == "System Admin" else 0
+
     frappe.response["message"] = {
-        "success_key":1,
-        "message":"Authentication success",
-        "sid":frappe.session.sid,
-        "api_key":user.api_key,
-        "api_secret":api_generate,
-        "username":user.username,
-        "email":user.email,
+        "success_key": 1,
+        "message": "Authentication success",
+        "sid": frappe.session.sid,
+        "api_key": user.api_key,
+        "api_secret": api_generate,
+        "username": user.username,
+        "email": user.email,
         "base_url": frappe.utils.get_url(),
-        "user_role": user.role_profile_name
+        "IsWeighbridge": is_weighbridge,
+        "IsSales": is_sales,
+        "IsAdmin": is_admin,
     }
+
 
 def generate_keys(user):
     user_details = frappe.get_doc('User', user)
