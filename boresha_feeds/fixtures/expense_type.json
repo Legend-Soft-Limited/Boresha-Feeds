@@ -1,0 +1,18 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Expense Type",
+  "expense_account": null,
+  "expense_type": "Fuel",
+  "modified": "2025-01-25 09:06:03.792816",
+  "name": "Fuel"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Expense Type",
+  "expense_account": null,
+  "expense_type": "Airtime",
+  "modified": "2025-01-25 09:06:19.487772",
+  "name": "Airtime"
+ }
+]

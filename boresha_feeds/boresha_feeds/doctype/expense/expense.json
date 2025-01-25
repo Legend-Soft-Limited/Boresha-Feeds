@@ -1,0 +1,93 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-25 08:58:52.483504",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "expense_type",
+  "amount",
+  "date",
+  "column_break_75zf",
+  "vehicle",
+  "litres",
+  "section_break_ukvt",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "expense_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Expense Type",
+   "options": "Expense Type",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval: doc.expense_type == \"Fuel\"",
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Vehicle",
+   "mandatory_depends_on": "eval: doc.expense_type == \"Fuel\"",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_75zf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: doc.expense_type == \"Fuel\"",
+   "fieldname": "litres",
+   "fieldtype": "Float",
+   "label": "Litres",
+   "mandatory_depends_on": "eval: doc.expense_type == \"Fuel\""
+  },
+  {
+   "fieldname": "section_break_ukvt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-25 09:18:43.205411",
+ "modified_by": "Administrator",
+ "module": "Boresha Feeds",
+ "name": "Expense",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -131,6 +131,65 @@ def get_vehicles():
 
 
 @frappe.whitelist( methods="GET" )
+def get_expense_types():
+    try:
+        expense_types = frappe.get_all("Expense Type", fields=["name"])
+        
+        expense_type_list = [{"expense_type": expense_type["name"]} for expense_type in expense_types]
+        
+        return {'status': 200, 'expense_types': expense_type_list}
+
+    except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"{e}")
+            return {'error': str(e)}, 400
+    
+
+@frappe.whitelist(methods="POST")
+def create_expense(**kwargs):
+    try:
+        expense_doc = frappe.get_doc({
+            "doctype": "Expense",
+            "expense_type": kwargs.get('expense_type'),
+            "amount": kwargs.get('amount'),
+            "vehicle": kwargs.get('vehicle'),
+            "litres": kwargs.get('litres'),
+            "description": kwargs.get('description'),
+            "date": kwargs.get('date')
+        })
+        expense_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+        frappe.db.commit()
+        return {'status': 200, 'message': 'Expense created successfully.'}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {
+            'status': 500,
+            'message': f'An error occurred: {str(e)}',
+        }
+
+
+@frappe.whitelist(methods="GET")
+def get_expenses():
+    try:
+
+        expenses = frappe.db.get_all(
+            "Expense",
+            fields=["name as expense_id", "expense_type as expense_type", "amount as amount", "vehicle as vehicle", "litres"],
+            filters={},
+            order_by="modified desc"
+        )
+
+        if not expenses:
+            return {'status': 404, 'message': 'No tickets found.'}
+
+        return {'status': 200, 'expense_data': expenses}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{e}")
+        return {'error': str(e)}, 400
+    
+
+
+@frappe.whitelist( methods="GET" )
 def get_raw_materials():
     try:
         raw_materials = frappe.get_all("Item", filters={"item_group": "Raw Material"}, fields=["name"])

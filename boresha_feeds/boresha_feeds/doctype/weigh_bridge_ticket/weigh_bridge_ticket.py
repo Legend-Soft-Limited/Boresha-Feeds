@@ -20,3 +20,7 @@ class WeighBridgeTicket(Document):
 		if self.workflow_state == "Approved":
 			if not self.no_of_bags:
 				frappe.throw("No of bags is required to proceed.")
+		
+		if self.workflow_state == "Pending Approval by Store Clerk":
+			if not self.truck_weight:
+				frappe.throw("Second weight is needed to proceed.")

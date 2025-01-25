@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"o99bH-39zq\",\"type\":\"spacer\",\"data\":{\"col\":5}},{\"id\":\"yiHkkx1won\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Your Shortcuts</span>\",\"col\":7}},{\"id\":\"Y6fhP6pvW9\",\"type\":\"card\",\"data\":{\"card_name\":\"Purchase & Procurement\",\"col\":4}},{\"id\":\"AWBeKI2A8T\",\"type\":\"card\",\"data\":{\"card_name\":\"Weigh Bridge Tickets\",\"col\":4}},{\"id\":\"oAO8oYrbJz\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"id\":\"257dk2x31v\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock\",\"col\":4}},{\"id\":\"d9CT1sK8nY\",\"type\":\"card\",\"data\":{\"card_name\":\"Manufacturing\",\"col\":4}},{\"id\":\"YQuxVNzvEK\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "content": "[{\"id\":\"o99bH-39zq\",\"type\":\"spacer\",\"data\":{\"col\":5}},{\"id\":\"yiHkkx1won\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Your Shortcuts</span>\",\"col\":7}},{\"id\":\"Y6fhP6pvW9\",\"type\":\"card\",\"data\":{\"card_name\":\"Purchase & Procurement\",\"col\":4}},{\"id\":\"AWBeKI2A8T\",\"type\":\"card\",\"data\":{\"card_name\":\"Weigh Bridge Tickets\",\"col\":4}},{\"id\":\"oAO8oYrbJz\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"id\":\"257dk2x31v\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock\",\"col\":4}},{\"id\":\"d9CT1sK8nY\",\"type\":\"card\",\"data\":{\"card_name\":\"Manufacturing\",\"col\":4}},{\"id\":\"YQuxVNzvEK\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}},{\"id\":\"H252-lShx-\",\"type\":\"card\",\"data\":{\"card_name\":\"Expenses\",\"col\":4}}]",
  "creation": "2025-01-23 18:34:58.042922",
  "custom_blocks": [],
  "docstatus": 0,
@@ -236,9 +236,38 @@
    "link_type": "Report",
    "onboard": 1,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Expenses",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Expense",
+   "link_count": 0,
+   "link_to": "Expense",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Expense Type",
+   "link_count": 0,
+   "link_to": "Expense Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2025-01-23 19:16:03.457784",
+ "modified": "2025-01-25 09:20:25.840986",
  "modified_by": "Administrator",
  "module": "Boresha Feeds",
  "name": "System Admins",

@@ -39,6 +39,15 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2025-01-10 16:52:07.768491",
+  "name": "Pending Approval",
+  "style": "Info",
+  "workflow_state_name": "Pending Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2025-01-14 16:51:14.587710",
   "name": "Pending Store Manager Approval",
   "style": "Info",
@@ -61,15 +70,6 @@
   "name": "Draft",
   "style": "Warning",
   "workflow_state_name": "Draft"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2025-01-10 16:52:07.768491",
-  "name": "Pending Approval",
-  "style": "Info",
-  "workflow_state_name": "Pending Approval"
  },
  {
   "docstatus": 0,
