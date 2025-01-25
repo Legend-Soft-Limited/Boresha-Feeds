@@ -1,6 +1,7 @@
 import frappe
 import requests
 import random
+from dateutil import parser
 
 
 @frappe.whitelist()
@@ -105,7 +106,7 @@ def generate_keys(user):
 @frappe.whitelist( methods="GET" )
 def get_suppliers():
     try:
-        suppliers = frappe.get_all("Supplier", fields=["name"])
+        suppliers = frappe.get_all("Supplier", filters={"supplier_group": "Raw Material"}, fields=["name"])
         
         supplier_list = [{"supplier": supplier["name"]} for supplier in suppliers]
         
@@ -128,65 +129,6 @@ def get_vehicles():
     except Exception as e:
             frappe.log_error(frappe.get_traceback(), f"{e}")
             return {'error': str(e)}, 400
-
-
-@frappe.whitelist( methods="GET" )
-def get_expense_types():
-    try:
-        expense_types = frappe.get_all("Expense Type", fields=["name"])
-        
-        expense_type_list = [{"expense_type": expense_type["name"]} for expense_type in expense_types]
-        
-        return {'status': 200, 'expense_types': expense_type_list}
-
-    except Exception as e:
-            frappe.log_error(frappe.get_traceback(), f"{e}")
-            return {'error': str(e)}, 400
-    
-
-@frappe.whitelist(methods="POST")
-def create_expense(**kwargs):
-    try:
-        expense_doc = frappe.get_doc({
-            "doctype": "Expense",
-            "expense_type": kwargs.get('expense_type'),
-            "amount": kwargs.get('amount'),
-            "vehicle": kwargs.get('vehicle'),
-            "litres": kwargs.get('litres'),
-            "description": kwargs.get('description'),
-            "date": kwargs.get('date')
-        })
-        expense_doc.insert(ignore_mandatory=True, ignore_permissions=True)
-        frappe.db.commit()
-        return {'status': 200, 'message': 'Expense created successfully.'}
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
-        return {
-            'status': 500,
-            'message': f'An error occurred: {str(e)}',
-        }
-
-
-@frappe.whitelist(methods="GET")
-def get_expenses():
-    try:
-
-        expenses = frappe.db.get_all(
-            "Expense",
-            fields=["name as expense_id", "expense_type as expense_type", "amount as amount", "vehicle as vehicle", "litres"],
-            filters={},
-            order_by="modified desc"
-        )
-
-        if not expenses:
-            return {'status': 404, 'message': 'No tickets found.'}
-
-        return {'status': 200, 'expense_data': expenses}
-
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), f"{e}")
-        return {'error': str(e)}, 400
-    
 
 
 @frappe.whitelist( methods="GET" )
@@ -276,6 +218,10 @@ def create_weigh_bridge_ticket(**kwargs):
         if external_vehicle_reg_number:
             external_vehicle_reg_number = external_vehicle_reg_number.upper()
 
+        first_weight_time = kwargs.get('first_weight_time')
+        formatted_date = parser.parse(first_weight_time).strftime("%Y-%m-%d")
+
+
         weigh_bridge_ticket_doc = frappe.get_doc({
             "doctype": "Weigh Bridge Ticket",
             "ticket_no": kwargs.get('ticket_no'),
@@ -289,7 +235,7 @@ def create_weigh_bridge_ticket(**kwargs):
             "driver_identity_number": kwargs.get('driver_identity_number'),
             "material": kwargs.get('raw_material'),
             "total_weight": kwargs.get('first_weight'),
-            "gross_time": kwargs.get('first_weight_time')
+            "gross_time": formatted_date
         })
         weigh_bridge_ticket_doc.insert(ignore_mandatory=True, ignore_permissions=True)
         frappe.db.commit()
@@ -308,10 +254,11 @@ def create_weigh_bridge_ticket(**kwargs):
 def update_second_weight(**kwargs):
     try:
         if frappe.db.exists("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')}):
-
+            second_weight_time = kwargs.get('second_weight_time')
+            formatted_date = parser.parse(second_weight_time).strftime("%Y-%m-%d")
             weigh_bridge_ticket_doc  =  frappe.get_doc("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')})
             net_weight  = float(weigh_bridge_ticket_doc.total_weight) - float(kwargs.get('second_weight'))
-            frappe.db.set_value("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')}, {"truck_weight": kwargs.get('second_weight'), "net_weight": net_weight})
+            frappe.db.set_value("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')}, {"truck_weight": kwargs.get('second_weight'), "net_weight": net_weight, "tare_time": formatted_date})
             frappe.db.commit()
             
             return {'status': 200, 'message': 'Second weight updated successfully.'}
@@ -354,7 +301,7 @@ def get_weigh_bridge_tickets():
 
         weigh_bridge_tickets = frappe.db.get_all(
             "Weigh Bridge Ticket",
-            fields=["name as weigh_brigde_ticket_no", "total_weight as first_weight", "material as raw_material", "driver_name as driver_name", "supplier"],
+            fields=["name as weigh_brigde_ticket_no", "total_weight as first_weight", "material as raw_material", "driver_name as driver_name", "supplier", "truck_weight as second_weight"],
             filters={"workflow_state": "Draft"},
             order_by="modified desc"
         )
@@ -362,12 +309,18 @@ def get_weigh_bridge_tickets():
         if not weigh_bridge_tickets:
             return {'status': 404, 'message': 'No tickets found.'}
 
+        for ticket in weigh_bridge_tickets:
+            if ticket['second_weight'] < 1:
+                ticket['workflow_state'] = "Draft"
+            else:
+                ticket['workflow_state'] = "Pending Forwarding to Store Clerk"
 
         return {'status': 200, 'ticket_data': weigh_bridge_tickets}
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{e}")
         return {'error': str(e)}, 400
+
     
 
 
@@ -412,3 +365,226 @@ def validate_otp_exists(usr, otp):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"Error in validate_otp_exists {str(e)}")
         return False
+
+
+@frappe.whitelist( methods="POST" )
+def create_fueling_list(**kwargs):
+    try:
+        date = kwargs.get('date')
+        formatted_date = parser.parse(date).strftime("%Y-%m-%d")
+        fueling_list_doc = frappe.get_doc({
+            "doctype": "Fueling List",
+            "date": formatted_date,
+            "vehicle_reg_no": kwargs.get('vehicle_reg_no'),
+            "petrol_station_pos_receipt_no": kwargs.get('petrol_station_pos_receipt_no'),
+            "route": kwargs.get('route'),
+            "mileage": kwargs.get('mileage'),
+            "litres": kwargs.get('litres'),
+            "amount": kwargs.get('amount')
+        })
+        fueling_list_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+        frappe.db.commit()
+        return {'status': 200, 'message': 'Fueling List created successfully.'}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
+
+@frappe.whitelist( methods="GET" )
+def get_fueling_list():
+    try:
+
+        fueling_lists = frappe.db.get_all(
+            "Fueling List",
+            fields=["date", "vehicle_reg_no", "petrol_station_pos_receipt_no", "route", "mileage", "litres", "amount"],
+            filters={"workflow_state": ["in", ["Pending Approval", "Draft"]]},
+            order_by="modified desc"
+        )
+
+        if not fueling_lists:
+            return {'status': 404, 'message': 'No fuel list found.'}
+
+        return {'status': 200, 'fueling_lists': fueling_lists}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{e}")
+        return {'error': str(e)}, 400
+
+
+
+@frappe.whitelist( methods="POST" )
+def update_fueling_list(**kwargs):
+    try:
+        fueling_list_name = kwargs.get('fueling_list_name')
+        if not fueling_list_name:
+            return {'status': 400, 'message': 'The "name" field is required to update the Fueling List.'}
+        
+        fueling_list_doc = frappe.get_doc("Fueling List", fueling_list_name)
+
+        date = kwargs.get('date')
+        formatted_date = parser.parse(date).strftime("%Y-%m-%d")
+
+        if 'date' in kwargs:
+            fueling_list_doc.date = formatted_date
+        if 'vehicle_reg_no' in kwargs:
+            fueling_list_doc.vehicle_reg_no = kwargs.get('vehicle_reg_no')
+        if 'petrol_station_pos_receipt_no' in kwargs:
+            fueling_list_doc.petrol_station_pos_receipt_no = kwargs.get('petrol_station_pos_receipt_no')
+        if 'route' in kwargs:
+            fueling_list_doc.route = kwargs.get('route')
+        if 'mileage' in kwargs:
+            fueling_list_doc.mileage = kwargs.get('mileage')
+        if 'litres' in kwargs:
+            fueling_list_doc.litres = kwargs.get('litres')
+        if 'amount' in kwargs:
+            fueling_list_doc.amount = kwargs.get('amount')
+
+        fueling_list_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        return {'status': 200, 'message': 'Fueling List updated successfully.'}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
+@frappe.whitelist( methods="POST" )
+def forward_fuel_list_for_approval(**kwargs):
+    try:
+        if frappe.db.exists("Fueling List", {"name": kwargs.get('fuel_list_number')}):
+
+            frappe.db.set_value("Fueling List", {"name": kwargs.get('fuel_list_number')}, {"workflow_state": "Pending Approval"})
+            frappe.db.commit()
+            
+            return {'status': 200, 'message': 'Record forwarded successfully.'}
+        else:
+            return {'error': 'Record does not exist'}, 404
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}',}
+    
+
+
+@frappe.whitelist( methods="POST" )
+def create_expense(**kwargs):
+    try:
+        expense_items = kwargs.get('expense_items')
+        date = kwargs.get('date')
+        formatted_date = parser.parse(date).strftime("%Y-%m-%d")
+
+        expense_details = []
+        total_amount = 0
+
+        for expense_item in expense_items:
+            expense_details.append({
+                "item": expense_item['item'],
+                "amount": expense_item['amount'],
+            })
+            total_amount += float(expense_item['amount'])
+
+        expense_doc = frappe.get_doc({
+            "doctype": "Expense",
+            "expense_type": kwargs.get('expense_type'),
+            "supplier": kwargs.get('supplier'),
+            "expense_details": expense_details,
+            "description": kwargs.get('description'),
+            "date": formatted_date,
+            "total_amount": total_amount
+        })
+        expense_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+        frappe.db.commit()
+        return {'status': 200, 'message': 'Expense created successfully.'}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
+
+@frappe.whitelist( methods="GET" )
+def get_expenses():
+    try:
+        expense_data = frappe.db.sql("""
+            SELECT
+                ED.item AS item,
+                ED.amount AS amount,
+                E.expense_type AS expense_type,
+                E.supplier AS supplier,
+                E.date AS date,
+                E.total_amount AS total_amount
+            FROM
+                `tabExpense Details` ED
+            JOIN
+                `tabExpense` E ON ED.parent = E.name
+            WHERE
+                E.workflow_state IN ('Pending Approval', 'Draft')
+        """, as_dict=True)
+
+        return {
+            'status': 200,
+            'expense_data': expense_data
+        }
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{e}")
+        return {'error': str(e)}, 400
+
+
+@frappe.whitelist( methods="GET" )
+def get_expense_suppliers():
+    try:
+        suppliers = frappe.get_all("Supplier", filters={"supplier_group": "Expense"}, fields=["name"])
+        
+        supplier_list = [{"supplier": supplier["name"]} for supplier in suppliers]
+        
+        return {'status': 200, 'suppliers': supplier_list}
+
+    except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"{e}")
+            return {'error': str(e)}, 400
+    
+
+
+@frappe.whitelist( methods="POST" )
+def forward_expense_for_approval(**kwargs):
+    try:
+        if frappe.db.exists("Expense", {"name": kwargs.get('expense_name')}):
+
+            frappe.db.set_value("Expense", {"name": kwargs.get('expense_name')}, {"workflow_state": "Pending Approval"})
+            frappe.db.commit()
+            
+            return {'status': 200, 'message': 'Record forwarded successfully.'}
+        else:
+            return {'error': 'Record does not exist'}, 404
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}',}
+    
+
+@frappe.whitelist( methods="GET" )
+def get_expense_types():
+    try:
+        expense_types = frappe.get_all("Expense Type", fields=["name"])
+        
+        expense_type_list = [{"expense_type": expense_type["name"]} for expense_type in expense_types]
+        
+        return {'status': 200, 'expense_types': expense_type_list}
+
+    except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"{e}")
+            return {'error': str(e)}, 400
+
+
+@frappe.whitelist( methods="GET" )
+def get_expense_items():
+    try:
+        expense_items = frappe.get_all("Item", filters={"item_group": "Expense"}, fields=["name"]) 
+        expense_item_list = [{"expense_item": expense_item["name"]} for expense_item in expense_items]
+        
+        return {'status': 200, 'expense_item_list': expense_item_list}
+
+    except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"{e}")
+            return {'error': str(e)}, 400
