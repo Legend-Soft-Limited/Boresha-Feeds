@@ -504,17 +504,18 @@ def create_expense(**kwargs):
 
 
 
-@frappe.whitelist( methods="GET" )
+@frappe.whitelist(methods="GET")
 def get_expenses():
     try:
         expense_data = frappe.db.sql("""
             SELECT
-                ED.item AS item,
-                ED.amount AS amount,
+                E.name AS expense_name,
                 E.expense_type AS expense_type,
                 E.supplier AS supplier,
                 E.date AS date,
-                E.total_amount AS total_amount
+                E.total_amount AS total_amount,
+                ED.item AS item,
+                ED.amount AS item_amount
             FROM
                 `tabExpense Details` ED
             JOIN
@@ -523,13 +524,38 @@ def get_expenses():
                 E.workflow_state IN ('Pending Approval', 'Draft')
         """, as_dict=True)
 
+        expenses = {}
+        for row in expense_data:
+            expense_name = row.pop("expense_name")
+            
+            if expense_name not in expenses:
+                expenses[expense_name] = {
+                    "expense_type": row["expense_type"],
+                    "supplier": row["supplier"],
+                    "date": row["date"],
+                    "total_amount": row["total_amount"],
+                    "details": []
+                }
+
+            expenses[expense_name]["details"].append({
+                "item": row["item"],
+                "amount": row["item_amount"]
+            })
+
+        expenses_list = [
+            {"expense_name": name, **details}
+            for name, details in expenses.items()
+        ]
+
         return {
-            'status': 200,
-            'expense_data': expense_data
+            "status": 200,
+            "expenses": expenses_list
         }
+
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{e}")
-        return {'error': str(e)}, 400
+        return {"error": str(e)}, 400
+
 
 
 @frappe.whitelist( methods="GET" )
