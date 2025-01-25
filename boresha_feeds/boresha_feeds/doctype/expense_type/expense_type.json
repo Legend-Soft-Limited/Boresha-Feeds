@@ -21,13 +21,12 @@
    "fieldname": "expense_account",
    "fieldtype": "Link",
    "label": "Expense Account",
-   "options": "Account",
-   "reqd": 1
+   "options": "Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-25 09:09:49.456882",
+ "modified": "2025-01-25 09:23:59.090441",
  "modified_by": "Administrator",
  "module": "Boresha Feeds",
  "name": "Expense Type",
