@@ -263,10 +263,12 @@ def update_second_weight(**kwargs):
             if second_weight_time:
                 formatted_datetime = parser.parse(second_weight_time).strftime("%Y-%m-%d %H:%M:%S")
 
-            frappe.db.set_value("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')}, {"truck_weight": kwargs.get('second_weight'), "net_weight": net_weight, "tare_time": formatted_datetime})
-            frappe.db.commit()
+                frappe.db.set_value("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')}, {"truck_weight": kwargs.get('second_weight'), "net_weight": net_weight, "tare_time": formatted_datetime})
+                frappe.db.commit()
             
-            return {'status': 200, 'message': 'Second weight updated successfully.'}
+                return {'status': 200, 'message': 'Second weight updated successfully.'}
+            else:
+                return {'status': 500, 'message': 'Second weight time is needed.'}
         else:
             return {'error': 'Weigh bridge ticket does not exist'}, 404
 
@@ -378,20 +380,21 @@ def create_fueling_list(**kwargs):
         date = kwargs.get('date')
         if date:
             formatted_date = parser.parse(date).strftime("%Y-%m-%d")
-        fueling_list_doc = frappe.get_doc({
-            "doctype": "Fueling List",
-            "date": formatted_date,
-            "vehicle_reg_no": kwargs.get('vehicle_reg_no'),
-            "petrol_station_pos_receipt_no": kwargs.get('petrol_station_pos_receipt_no'),
-            "route": kwargs.get('route'),
-            "mileage": kwargs.get('mileage'),
-            "litres": kwargs.get('litres'),
-            "amount": kwargs.get('amount')
-        })
-        fueling_list_doc.insert(ignore_mandatory=True, ignore_permissions=True)
-        frappe.db.commit()
-        return {'status': 200, 'message': 'Fueling List created successfully.'}
-
+            fueling_list_doc = frappe.get_doc({
+                "doctype": "Fueling List",
+                "date": formatted_date,
+                "vehicle_reg_no": kwargs.get('vehicle_reg_no'),
+                "petrol_station_pos_receipt_no": kwargs.get('petrol_station_pos_receipt_no'),
+                "route": kwargs.get('route'),
+                "mileage": kwargs.get('mileage'),
+                "litres": kwargs.get('litres'),
+                "amount": kwargs.get('amount')
+            })
+            fueling_list_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+            frappe.db.commit()
+            return {'status': 200, 'message': 'Fueling List created successfully.'}
+        else:
+            return {'status': 500, 'message': 'Date is needed.'}
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
@@ -484,28 +487,30 @@ def create_expense(**kwargs):
         if date:
             formatted_date = parser.parse(date).strftime("%Y-%m-%d")
 
-        expense_details = []
-        total_amount = 0
+            expense_details = []
+            total_amount = 0
 
-        for expense_item in expense_items:
-            expense_details.append({
-                "item": expense_item['item'],
-                "amount": expense_item['amount'],
+            for expense_item in expense_items:
+                expense_details.append({
+                    "item": expense_item['item'],
+                    "amount": expense_item['amount'],
+                })
+                total_amount += float(expense_item['amount'])
+
+            expense_doc = frappe.get_doc({
+                "doctype": "Expense",
+                "expense_type": kwargs.get('expense_type'),
+                "supplier": kwargs.get('supplier'),
+                "expense_details": expense_details,
+                "description": kwargs.get('description'),
+                "date": formatted_date,
+                "total_amount": total_amount
             })
-            total_amount += float(expense_item['amount'])
-
-        expense_doc = frappe.get_doc({
-            "doctype": "Expense",
-            "expense_type": kwargs.get('expense_type'),
-            "supplier": kwargs.get('supplier'),
-            "expense_details": expense_details,
-            "description": kwargs.get('description'),
-            "date": formatted_date,
-            "total_amount": total_amount
-        })
-        expense_doc.insert(ignore_mandatory=True, ignore_permissions=True)
-        frappe.db.commit()
-        return {'status': 200, 'message': 'Expense created successfully.'}
+            expense_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+            frappe.db.commit()
+            return {'status': 200, 'message': 'Expense created successfully.'}
+        else:
+            return {'status': 500, 'message': 'Date is needed.'}
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
