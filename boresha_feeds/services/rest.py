@@ -627,3 +627,18 @@ def get_expense_items():
     except Exception as e:
             frappe.log_error(frappe.get_traceback(), f"{e}")
             return {'error': str(e)}, 400
+
+
+
+@frappe.whitelist( methods="GET" )
+def get_routes():
+    try:
+        routes = frappe.get_all("Route", fields=["name"])
+        
+        route_list = [{"route": route["name"]} for route in routes]
+        
+        return {'status': 200, 'routes': route_list}
+
+    except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"{e}")
+            return {'error': str(e)}, 400
