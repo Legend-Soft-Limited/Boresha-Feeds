@@ -224,25 +224,26 @@ def create_weigh_bridge_ticket(**kwargs):
             formatted_datetime = parser.parse(first_weight_time).strftime("%Y-%m-%d %H:%M:%S")
 
 
-        weigh_bridge_ticket_doc = frappe.get_doc({
-            "doctype": "Weigh Bridge Ticket",
-            "ticket_no": kwargs.get('ticket_no'),
-            "supplier": kwargs.get('supplier'),
-            "internal_vehicle": kwargs.get('internal_vehicle'),
-            "external_vehicle_reg": external_vehicle_reg_number,
-            "internal_vehicle_reg": kwargs.get('internal_vehicle_reg_number'),
-            "vehicle_type": kwargs.get('vehicle_type'),
-            "driver_name": driver_name,
-            "drive_mobile_no": kwargs.get('drive_mobile_no'),
-            "driver_identity_number": kwargs.get('driver_identity_number'),
-            "material": kwargs.get('raw_material'),
-            "total_weight": kwargs.get('first_weight'),
-            "gross_time": formatted_datetime
-        })
-        weigh_bridge_ticket_doc.insert(ignore_mandatory=True, ignore_permissions=True)
-        frappe.db.commit()
-        return {'status': 200, 'message': 'Weight bridge created successfully.'}
-
+            weigh_bridge_ticket_doc = frappe.get_doc({
+                "doctype": "Weigh Bridge Ticket",
+                "ticket_no": kwargs.get('ticket_no'),
+                "supplier": kwargs.get('supplier'),
+                "internal_vehicle": kwargs.get('internal_vehicle'),
+                "external_vehicle_reg": external_vehicle_reg_number,
+                "internal_vehicle_reg": kwargs.get('internal_vehicle_reg_number'),
+                "vehicle_type": kwargs.get('vehicle_type'),
+                "driver_name": driver_name,
+                "drive_mobile_no": kwargs.get('drive_mobile_no'),
+                "driver_identity_number": kwargs.get('driver_identity_number'),
+                "material": kwargs.get('raw_material'),
+                "total_weight": kwargs.get('first_weight'),
+                "gross_time": formatted_datetime
+            })
+            weigh_bridge_ticket_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+            frappe.db.commit()
+            return {'status': 200, 'message': 'Weight bridge created successfully.'}
+        else:
+            return {'status': 500, 'message': 'First weight time is needed.'}
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {
