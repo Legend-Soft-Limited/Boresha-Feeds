@@ -219,7 +219,9 @@ def create_weigh_bridge_ticket(**kwargs):
             external_vehicle_reg_number = external_vehicle_reg_number.upper()
 
         first_weight_time = kwargs.get('first_weight_time')
-        formatted_date = parser.parse(first_weight_time).strftime("%Y-%m-%d")
+
+        if first_weight_time:
+            formatted_datetime = parser.parse(first_weight_time).strftime("%Y-%m-%d %H:%M:%S")
 
 
         weigh_bridge_ticket_doc = frappe.get_doc({
@@ -235,7 +237,7 @@ def create_weigh_bridge_ticket(**kwargs):
             "driver_identity_number": kwargs.get('driver_identity_number'),
             "material": kwargs.get('raw_material'),
             "total_weight": kwargs.get('first_weight'),
-            "gross_time": formatted_date
+            "gross_time": formatted_datetime
         })
         weigh_bridge_ticket_doc.insert(ignore_mandatory=True, ignore_permissions=True)
         frappe.db.commit()
@@ -255,10 +257,12 @@ def update_second_weight(**kwargs):
     try:
         if frappe.db.exists("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')}):
             second_weight_time = kwargs.get('second_weight_time')
-            formatted_date = parser.parse(second_weight_time).strftime("%Y-%m-%d")
             weigh_bridge_ticket_doc  =  frappe.get_doc("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')})
             net_weight  = float(weigh_bridge_ticket_doc.total_weight) - float(kwargs.get('second_weight'))
-            frappe.db.set_value("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')}, {"truck_weight": kwargs.get('second_weight'), "net_weight": net_weight, "tare_time": formatted_date})
+            if second_weight_time:
+                formatted_datetime = parser.parse(second_weight_time).strftime("%Y-%m-%d %H:%M:%S")
+
+            frappe.db.set_value("Weigh Bridge Ticket", {"name": kwargs.get('weigh_bridge_ticket_number')}, {"truck_weight": kwargs.get('second_weight'), "net_weight": net_weight, "tare_time": formatted_datetime})
             frappe.db.commit()
             
             return {'status': 200, 'message': 'Second weight updated successfully.'}
@@ -371,7 +375,8 @@ def validate_otp_exists(usr, otp):
 def create_fueling_list(**kwargs):
     try:
         date = kwargs.get('date')
-        formatted_date = parser.parse(date).strftime("%Y-%m-%d")
+        if date:
+            formatted_date = parser.parse(date).strftime("%Y-%m-%d")
         fueling_list_doc = frappe.get_doc({
             "doctype": "Fueling List",
             "date": formatted_date,
@@ -424,7 +429,8 @@ def update_fueling_list(**kwargs):
         fueling_list_doc = frappe.get_doc("Fueling List", fueling_list_name)
 
         date = kwargs.get('date')
-        formatted_date = parser.parse(date).strftime("%Y-%m-%d")
+        if date:
+            formatted_date = parser.parse(date).strftime("%Y-%m-%d")
 
         if 'date' in kwargs:
             fueling_list_doc.date = formatted_date
@@ -474,7 +480,8 @@ def create_expense(**kwargs):
     try:
         expense_items = kwargs.get('expense_items')
         date = kwargs.get('date')
-        formatted_date = parser.parse(date).strftime("%Y-%m-%d")
+        if date:
+            formatted_date = parser.parse(date).strftime("%Y-%m-%d")
 
         expense_details = []
         total_amount = 0
