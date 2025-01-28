@@ -407,7 +407,7 @@ def get_fueling_list():
 
         fueling_lists = frappe.db.get_all(
             "Fueling List",
-            fields=["date", "vehicle_reg_no", "petrol_station_pos_receipt_no", "route", "mileage", "litres", "amount", "workflow_state as status"],
+            fields=["date", "vehicle_reg_no", "petrol_station_pos_receipt_no", "route", "mileage", "litres", "amount", "workflow_state as status", "name as fueling_list_name"],
             filters={"workflow_state": ["in", ["Pending Approval", "Draft"]]},
             order_by="modified desc"
         )
