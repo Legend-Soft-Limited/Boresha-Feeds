@@ -407,7 +407,7 @@ def get_fueling_list():
 
         fueling_lists = frappe.db.get_all(
             "Fueling List",
-            fields=["date", "vehicle_reg_no", "petrol_station_pos_receipt_no", "route", "mileage", "litres", "amount"],
+            fields=["date", "vehicle_reg_no", "petrol_station_pos_receipt_no", "route", "mileage", "litres", "amount", "workflow_state as status"],
             filters={"workflow_state": ["in", ["Pending Approval", "Draft"]]},
             order_by="modified desc"
         )
@@ -528,7 +528,8 @@ def get_expenses():
                 E.date AS date,
                 E.total_amount AS total_amount,
                 ED.item AS item,
-                ED.amount AS item_amount
+                ED.amount AS item_amount,
+                E.workflow_state AS status
             FROM
                 `tabExpense Details` ED
             JOIN

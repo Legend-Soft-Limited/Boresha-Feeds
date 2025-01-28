@@ -13703,7 +13703,7 @@
     "type": "Link"
    }
   ],
-  "modified": "2025-01-23 19:16:42.292000",
+  "modified": "2025-01-28 17:13:11.774314",
   "module": "Boresha Feeds",
   "name": "Store Clerk & Manager",
   "number_cards": [],
@@ -13716,13 +13716,13 @@
     "parent": "Store Clerk & Manager",
     "parentfield": "roles",
     "parenttype": "Workspace",
-    "role": "System Admin"
+    "role": "Stock Manager"
    },
    {
     "parent": "Store Clerk & Manager",
     "parentfield": "roles",
     "parenttype": "Workspace",
-    "role": "System Manager"
+    "role": "Store Clerk"
    }
   ],
   "sequence_id": 31.0,
