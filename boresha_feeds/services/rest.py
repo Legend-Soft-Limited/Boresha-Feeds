@@ -548,6 +548,7 @@ def get_expenses():
                     "supplier": row["supplier"],
                     "date": row["date"],
                     "total_amount": row["total_amount"],
+                    "status": row["status"],
                     "details": []
                 }
 
