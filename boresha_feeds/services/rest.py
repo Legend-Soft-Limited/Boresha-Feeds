@@ -676,43 +676,50 @@ def get_sales_items():
 
 
 
-@frappe.whitelist( methods="POST" )
+@frappe.whitelist(methods="POST")
 def create_sales_order(**kwargs):
     try:
         sales_order_items = kwargs.get('sales_order_items')
         delivery_date = kwargs.get('delivery_date')
         customer = kwargs.get('customer')
         credit_balance = check_customer_credit_limit(customer)
-    
-        if delivery_date:
-            formatted_date = parser.parse(delivery_date).strftime("%Y-%m-%d")
 
-            sales_order_items_details = []
-
-            for sales_order_item in sales_order_items:
-                rate = frappe.db.get_value("Item Price", {"item_code": sales_order_item['item_code'], "price_list": "Standard Selling"}, "price_list_rate")
-
-                sales_order_items_details.append({
-                    "item_code": sales_order_item['item_code'],
-                    "delivery_date": formatted_date,
-                    "qty": sales_order_item['quantity'],
-                    "rate": rate
-                })
-
-            sales_order_doc = frappe.get_doc({
-                "doctype": "Sales Order",
-                "customer":customer,
-                "delivery_date": formatted_date,
-                "items": sales_order_items_details
-            })
-            sales_order_doc.insert(ignore_mandatory=True, ignore_permissions=True)
-            if credit_balance < sales_order_doc.rounded_total:
-                return {'status': 500, 'message': 'Sales amount exceeds customer credit balance.'}
-            else:
-                frappe.db.commit()
-                return {'status': 200, 'message': 'Sales order created successfully.'}
-        else:
+        if not delivery_date:
             return {'status': 500, 'message': 'Date is needed.'}
+
+        formatted_date = parser.parse(delivery_date).strftime("%Y-%m-%d")
+        sales_order_items_details = []
+
+        total_amount = 0
+
+        for sales_order_item in sales_order_items:
+            rate = frappe.db.get_value("Item Price", {"item_code": sales_order_item['item_code'], "price_list": "Standard Selling"}, "price_list_rate")
+            line_total = sales_order_item['quantity'] * rate
+            total_amount += line_total
+
+            sales_order_items_details.append({
+                "item_code": sales_order_item['item_code'],
+                "delivery_date": formatted_date,
+                "qty": sales_order_item['quantity'],
+                "rate": rate
+            })
+
+        if credit_balance < total_amount:
+            exceeded_amount = total_amount - credit_balance
+            return {'status': 500, 'message': f'Sales amount exceeds customer credit balance by {exceeded_amount:,.2f}.'}
+
+        sales_order_doc = frappe.get_doc({
+            "doctype": "Sales Order",
+            "customer": customer,
+            "delivery_date": formatted_date,
+            "items": sales_order_items_details
+        })
+
+        sales_order_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+        frappe.db.commit()
+
+        return {'status': 200, 'message': 'Sales order created successfully.'}
+
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
@@ -758,7 +765,7 @@ def get_sales_orders():
             JOIN
                 `tabSales Order Item` SOI ON SOI.parent = SO.name
             WHERE
-                SO.docstatus != 0
+                SO.docstatus != 2
         """, as_dict=True)
 
         for row in sales_orders_data:
