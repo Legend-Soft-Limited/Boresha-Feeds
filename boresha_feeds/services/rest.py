@@ -644,3 +644,152 @@ def get_routes():
     except Exception as e:
             frappe.log_error(frappe.get_traceback(), f"{e}")
             return {'error': str(e)}, 400
+
+
+
+@frappe.whitelist( methods="GET" )
+def get_customers():
+    try:
+        customers = frappe.get_all("Customer", fields=["name"])
+        
+        customer_list = [{"customer": customer["name"]} for customer in customers]
+        
+        return {'status': 200, 'customer': customer_list}
+
+    except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"{e}")
+            return {'error': str(e)}, 400
+
+
+@frappe.whitelist( methods="GET" )
+def get_sales_items():
+    try:
+        items = frappe.get_all("Item", filters={"item_group": "Products"}, fields=["name"])
+        
+        item_list = [{"item": item["name"]} for item in items]
+        
+        return {'status': 200, 'item': item_list}
+
+    except Exception as e:
+            frappe.log_error(frappe.get_traceback(), f"{e}")
+            return {'error': str(e)}, 400
+
+
+
+@frappe.whitelist( methods="POST" )
+def create_sales_order(**kwargs):
+    try:
+        sales_order_items = kwargs.get('sales_order_items')
+        delivery_date = kwargs.get('delivery_date')
+        customer = kwargs.get('customer')
+        credit_balance = check_customer_credit_limit(customer)
+    
+        if delivery_date:
+            formatted_date = parser.parse(delivery_date).strftime("%Y-%m-%d")
+
+            sales_order_items_details = []
+
+            for sales_order_item in sales_order_items:
+                rate = frappe.db.get_value("Item Price", {"item_code": sales_order_item['item_code'], "price_list": "Standard Selling"}, "price_list_rate")
+
+                sales_order_items_details.append({
+                    "item_code": sales_order_item['item_code'],
+                    "delivery_date": formatted_date,
+                    "qty": sales_order_item['quantity'],
+                    "rate": rate
+                })
+
+            sales_order_doc = frappe.get_doc({
+                "doctype": "Sales Order",
+                "customer":customer,
+                "delivery_date": formatted_date,
+                "items": sales_order_items
+            })
+            sales_order_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+            if credit_balance < sales_order_doc.rounded_total:
+                return {'status': 500, 'message': 'Sales amount exceeds customer credit balance.'}
+            else:
+                frappe.db.commit()
+                return {'status': 200, 'message': 'Sales order created successfully.'}
+        else:
+            return {'status': 500, 'message': 'Date is needed.'}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
+
+def check_customer_credit_limit(customer):
+    try:
+        credit_limit = frappe.db.get_value("Customer Credit Limit", {"parent": customer}, "credit_limit")
+        outstanding_customer_amount = frappe.db.sql(
+            """
+            SELECT SUM(outstanding_amount) 
+            FROM `tabSales Invoice` 
+            WHERE customer = %s AND docstatus = 1
+            """, (customer,))[0][0] or 0
+        
+        credit_balance = credit_limit - outstanding_customer_amount
+        return credit_balance
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+
+
+
+
+@frappe.whitelist(methods="GET")
+def get_sales_orders():
+    try:
+        sales_orders = {}
+        
+        sales_orders_data = frappe.db.sql("""
+            SELECT
+                SO.name AS sales_order_name,
+                SO.customer AS customer,
+                SO.delivery_date AS delivery_date,
+                SO.rounded_total AS total_amount,
+                SO.status AS status,
+                SOI.item_code AS item_code,
+                SOI.qty AS quantity,
+                SOI.rate AS unit_price,
+                SOI.amount AS amount
+            FROM
+                `tabSales Order` SO
+            JOIN
+                `tabSales Order Item` SOI ON SOI.parent = SO.name
+            WHERE
+                SO.docstatus != 0
+        """, as_dict=True)
+
+        for row in sales_orders_data:
+            sales_order_name = row.pop("sales_order_name")
+            
+            if sales_order_name not in sales_orders:
+                sales_orders[sales_order_name] = {
+                    "customer": row["customer"],
+                    "delivery_date": row["delivery_date"],
+                    "total_amount": row["total_amount"],
+                    "status": row["status"],
+                    "items": []
+                }
+
+            sales_orders[sales_order_name]["items"].append({
+                "item_code": row["item_code"],
+                "quantity": row["quantity"],
+                "unit_price": row["unit_price"],
+                "amount": row["amount"]
+            })
+
+        sales_orders_list = [
+            {"sales_order_name": name, **details}
+            for name, details in sales_orders.items()
+        ]
+
+        return {
+            "status": 200,
+            "sales_orders": sales_orders_list
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{e}")
+        return {"error": str(e)}, 400
