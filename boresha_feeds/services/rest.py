@@ -703,7 +703,7 @@ def create_sales_order(**kwargs):
                 "doctype": "Sales Order",
                 "customer":customer,
                 "delivery_date": formatted_date,
-                "items": sales_order_items
+                "items": sales_order_items_details
             })
             sales_order_doc.insert(ignore_mandatory=True, ignore_permissions=True)
             if credit_balance < sales_order_doc.rounded_total:
