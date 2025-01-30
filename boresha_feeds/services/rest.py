@@ -682,15 +682,18 @@ def create_sales_order(**kwargs):
         sales_order_items = kwargs.get('sales_order_items')
         delivery_date = kwargs.get('delivery_date')
         customer = kwargs.get('customer')
-        credit_balance = check_customer_credit_limit(customer)
-
+        
         if not delivery_date:
             return {'status': 500, 'message': 'Date is needed.'}
 
         formatted_date = parser.parse(delivery_date).strftime("%Y-%m-%d")
         sales_order_items_details = []
-
         total_amount = 0
+        
+        credit_balance, credit_limit_set = check_customer_credit_limit(customer)
+        
+        if not credit_limit_set:
+            return {'status': 500, 'message': 'Customer credit limit is not set. Please set a credit limit first.'}
 
         for sales_order_item in sales_order_items:
             rate = frappe.db.get_value("Item Price", {"item_code": sales_order_item['item_code'], "price_list": "Standard Selling"}, "price_list_rate")
@@ -725,10 +728,13 @@ def create_sales_order(**kwargs):
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
 
 
-
 def check_customer_credit_limit(customer):
     try:
         credit_limit = frappe.db.get_value("Customer Credit Limit", {"parent": customer}, "credit_limit")
+        
+        if credit_limit is None:
+            return 0, False
+
         outstanding_customer_amount = frappe.db.sql(
             """
             SELECT SUM(outstanding_amount) 
@@ -737,12 +743,10 @@ def check_customer_credit_limit(customer):
             """, (customer,))[0][0] or 0
         
         credit_balance = credit_limit - outstanding_customer_amount
-        if credit_balance:
-            return credit_balance
-        else:
-            return 0
+        return credit_balance, True
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return 0, False
 
 
 
