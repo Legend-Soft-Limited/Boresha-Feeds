@@ -390,7 +390,13 @@ def create_fueling_list(**kwargs):
 
         formatted_date = parser.parse(date).strftime("%Y-%m-%d")
 
-        route_details = [{"route": route['route']} for route in routes] if routes else []
+
+        route_details = []
+
+        for route in routes:
+            route_details.append({
+                "route": route['route']
+            })
 
         previous_vehicle_mileage = frappe.db.get_value(
             "Fueling List",
@@ -468,8 +474,15 @@ def update_fueling_list(**kwargs):
         mileage = kwargs.get('mileage')
         litres = kwargs.get('litres')
         amount = kwargs.get('amount')
+        routes = kwargs.get('routes')
         petrol_station_pos_receipt_no = kwargs.get('petrol_station_pos_receipt_no')
-        route_details = [{"route": route['route']} for route in kwargs.get('routes', [])]
+        
+        route_details = []
+
+        for route in routes:
+            route_details.append({
+                "route": route['route']
+            })
 
         if date:
             formatted_date = parser.parse(date).strftime("%Y-%m-%d")
