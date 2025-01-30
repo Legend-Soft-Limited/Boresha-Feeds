@@ -682,21 +682,24 @@ def create_sales_order(**kwargs):
         sales_order_items = kwargs.get('sales_order_items')
         delivery_date = kwargs.get('delivery_date')
         customer = kwargs.get('customer')
-        
+        sales_order_name = kwargs.get('sales_order_name')
+
         if not delivery_date:
             return {'status': 500, 'message': 'Date is needed.'}
 
         formatted_date = parser.parse(delivery_date).strftime("%Y-%m-%d")
         sales_order_items_details = []
         total_amount = 0
-        
+
         credit_balance, credit_limit_set = check_customer_credit_limit(customer)
-        
+
         if not credit_limit_set:
             return {'status': 500, 'message': 'Customer credit limit is not set. Please set a credit limit first.'}
 
         for sales_order_item in sales_order_items:
-            rate = frappe.db.get_value("Item Price", {"item_code": sales_order_item['item_code'], "price_list": "Standard Selling"}, "price_list_rate")
+            rate = frappe.db.get_value("Item Price", 
+                {"item_code": sales_order_item['item_code'], "price_list": "Standard Selling"}, 
+                "price_list_rate") or 0
             line_total = sales_order_item['quantity'] * rate
             total_amount += line_total
 
@@ -711,21 +714,43 @@ def create_sales_order(**kwargs):
             exceeded_amount = total_amount - credit_balance
             return {'status': 500, 'message': f'Sales amount exceeds customer credit balance by {exceeded_amount:,.2f}.'}
 
-        sales_order_doc = frappe.get_doc({
-            "doctype": "Sales Order",
-            "customer": customer,
-            "delivery_date": formatted_date,
-            "items": sales_order_items_details
-        })
 
-        sales_order_doc.insert(ignore_mandatory=True, ignore_permissions=True)
-        frappe.db.commit()
+        if sales_order_name:
+            if frappe.db.exists("Sales Order", {"name": sales_order_name}):
+                sales_order_doc = frappe.get_doc("Sales Order", sales_order_name)
+                sales_order_doc.delivery_date = formatted_date
+                sales_order_doc.customer = customer
 
-        return {'status': 200, 'message': 'Sales order created successfully.'}
+                sales_order_doc.items = [] 
+
+                for item in sales_order_items_details:
+                    sales_order_doc.append("items", item)
+
+                sales_order_doc.save(ignore_permissions=True)
+                frappe.db.commit()
+
+                return {'status': 200, 'message': 'Sales order updated successfully.'}
+            else:
+                return {'status': 404, 'message': 'Sales order not found.'}
+
+        else:
+
+            sales_order_doc = frappe.get_doc({
+                "doctype": "Sales Order",
+                "customer": customer,
+                "delivery_date": formatted_date,
+                "items": sales_order_items_details
+            })
+
+            sales_order_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+            frappe.db.commit()
+            return {'status': 200, 'message': 'Sales order created successfully.'}
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
 
 
 def check_customer_credit_limit(customer):
@@ -807,3 +832,47 @@ def get_sales_orders():
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{e}")
         return {"error": str(e)}, 400
+
+
+
+@frappe.whitelist( methods="POST" )
+def forward_sales_order_for_approval(**kwargs):
+    try:
+        if frappe.db.exists("Sales Order", {"name": kwargs.get('sales_order_name')}):
+
+            frappe.db.set_value("Sales Order", {"name": kwargs.get('sales_order_name')}, {"workflow_state": "Pending Approval by Store Manager"})
+            frappe.db.commit()
+            
+            return {'status': 200, 'message': 'Sales Order forwarded successfully.'}
+        else:
+            return {'status': 404, 'message': 'Sales Order does not exist'}    
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
+
+@frappe.whitelist( methods="POST" )
+def confirm_order_receival(**kwargs):
+    try:
+        sales_order_name = kwargs.get('sales_order_name')
+
+        if not sales_order_name:
+            return {'status': 400, 'message': 'Sales Order name is required.'}
+
+        if frappe.db.exists("Sales Order", {"name": sales_order_name}):
+            sales_order_doc = frappe.get_doc("Sales Order", sales_order_name)
+            if sales_order_doc.docstatus == 1:
+                return {'status': 200, 'message': 'Sales Order is already submitted.'}
+            sales_order_doc.submit()
+            frappe.db.set_value("Sales Order", sales_order_name, "workflow_state", "Completed")
+            frappe.db.commit()
+
+            return {'status': 200, 'message': 'Sales Order submitted successfully and marked as Completed.'}
+
+        else:
+            return {'status': 404, 'message': 'Sales Order does not exist'}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}'}

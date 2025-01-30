@@ -39,6 +39,33 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2025-01-30 15:40:50.354980",
+  "name": "Pending Loading Approval",
+  "style": "",
+  "workflow_state_name": "Pending Loading Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-01-30 15:42:35.626956",
+  "name": "Pending Confirmation by Sales Man",
+  "style": "",
+  "workflow_state_name": "Pending Confirmation by Sales Man"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-01-30 15:43:07.781218",
+  "name": "Completed",
+  "style": "",
+  "workflow_state_name": "Completed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2025-01-14 16:51:14.587710",
   "name": "Pending Store Manager Approval",
   "style": "Info",

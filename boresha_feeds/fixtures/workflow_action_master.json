@@ -30,6 +30,20 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2025-01-30 15:42:16.094984",
+  "name": "Forward for Confirmation",
+  "workflow_action_name": "Forward for Confirmation"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-01-30 15:42:59.022979",
+  "name": "Confirm",
+  "workflow_action_name": "Confirm"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2025-01-10 19:07:58.502994",
   "name": "Approve",
   "workflow_action_name": "Approve"
