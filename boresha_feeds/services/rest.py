@@ -418,7 +418,7 @@ def create_fueling_list(**kwargs):
             "date": formatted_date,
             "vehicle_reg_no": vehicle_reg_no,
             "petrol_station_pos_receipt_no": petrol_station_pos_receipt_no,
-            "route_details": route_details,
+            "routes": route_details,
             "mileage": mileage,
             "litres": litres,
             "amount": amount,
@@ -459,6 +459,65 @@ def get_fueling_list():
         return {'error': str(e)}, 400
 
 
+@frappe.whitelist(methods="GET")
+def get_fueling_list():
+    try:
+        fueling_lists_sql = frappe.db.sql("""
+            SELECT
+                FL.name AS fueling_list_name,
+                FL.date AS date,
+                FL.vehicle_reg_no AS vehicle_reg_no,
+                FL.petrol_station_pos_receipt_no AS petrol_station_pos_receipt_no,
+                FL.mileage AS mileage,
+                FL.litres AS litres,
+                FL.liters_per_kilometer AS liters_per_kilometer,
+                FL.workflow_state AS status,
+                RD.route AS route
+            FROM
+                `tabFueling List` FL
+            LEFT JOIN
+                `tabRoute Details` RD ON RD.parent = FL.name
+            WHERE
+                FL.workflow_state IN ('Pending Approval', 'Draft')
+        """, as_dict=True)
+
+        fueling_records = {}
+        for row in fueling_lists_sql:
+            fueling_list_name = row["fueling_list_name"]
+
+            if fueling_list_name not in fueling_records:
+                fueling_records[fueling_list_name] = {
+                    "fueling_list_name": fueling_list_name,
+                    "date": row["date"],
+                    "vehicle_reg_no": row["vehicle_reg_no"],
+                    "petrol_station_pos_receipt_no": row["petrol_station_pos_receipt_no"],
+                    "mileage": row["mileage"],
+                    "liters_per_kilometer": row["liters_per_kilometer"],
+                    "status": row["status"],
+                    "routes": []
+                }
+
+            if row["route"]:
+                fueling_records[fueling_list_name]["routes"].append({"route": row["route"]})
+
+        fueling_lists = list(fueling_records.values())
+
+        return {
+            "status": 200,
+            "fueling_lists": fueling_lists
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{e}")
+        return {"status": 500, "error": str(e)}
+
+
+
+
+
+
+
+
 
 @frappe.whitelist(methods="POST")
 def update_fueling_list(**kwargs):
@@ -495,7 +554,7 @@ def update_fueling_list(**kwargs):
             fueling_list_doc.petrol_station_pos_receipt_no = petrol_station_pos_receipt_no
 
         if route_details:
-            fueling_list_doc.route_details = route_details
+            fueling_list_doc.routes = route_details
 
         previous_vehicle_data = frappe.db.get_value(
             "Fueling List",
