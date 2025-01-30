@@ -378,7 +378,7 @@ def validate_otp_exists(usr, otp):
 def create_fueling_list(**kwargs):
     try:
         date = kwargs.get('date')
-        routes = kwargs.get('routes')
+        routes = kwargs.get('routes', [])
         vehicle_reg_no = kwargs.get('vehicle_reg_no')
         mileage = kwargs.get('mileage')
         litres = kwargs.get('litres')
@@ -386,25 +386,26 @@ def create_fueling_list(**kwargs):
         petrol_station_pos_receipt_no = kwargs.get('petrol_station_pos_receipt_no')
 
         if not date:
-            return {'status': 500, 'message': 'Date is needed.'}
+            return {'status': 500, 'message': 'Date is required.'}
 
         formatted_date = parser.parse(date).strftime("%Y-%m-%d")
 
-        route_details = [{"route": route['route']} for route in routes]
+        route_details = [{"route": route['route']} for route in routes] if routes else []
 
         previous_vehicle_mileage = frappe.db.get_value(
             "Fueling List",
             {"vehicle_reg_no": vehicle_reg_no, "workflow_state": "Approved"},
-            "mileage",
+            ["mileage", "litres"],
             order_by="creation DESC"
         )
 
-        if not previous_vehicle_mileage:
-            previous_vehicle_mileage = frappe.db.get_value("Vehicle", {"name": vehicle_reg_no}, "last_odometer")
-
-        mileage_covered = mileage - previous_vehicle_mileage if previous_vehicle_mileage else 0
-
-        liters_per_kilometer = mileage_covered / litres if litres else 0
+        liters_per_kilometer = 0
+        if previous_vehicle_mileage:
+            prev_mileage, prev_litres = previous_vehicle_mileage
+            if mileage is not None and prev_mileage is not None and litres:
+                mileage_covered = mileage - prev_mileage
+                if mileage_covered > 0 and prev_litres:
+                    liters_per_kilometer = litres / mileage_covered
 
         fueling_list_doc = frappe.get_doc({
             "doctype": "Fueling List",
@@ -426,6 +427,7 @@ def create_fueling_list(**kwargs):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
 
 
 
@@ -472,7 +474,7 @@ def update_fueling_list(**kwargs):
         if date:
             formatted_date = parser.parse(date).strftime("%Y-%m-%d")
             fueling_list_doc.date = formatted_date
-        
+
         if vehicle_reg_no:
             fueling_list_doc.vehicle_reg_no = vehicle_reg_no
 
@@ -482,28 +484,36 @@ def update_fueling_list(**kwargs):
         if route_details:
             fueling_list_doc.route_details = route_details
 
-        previous_vehicle_mileage = frappe.db.get_value(
+        previous_vehicle_data = frappe.db.get_value(
             "Fueling List",
             {"vehicle_reg_no": vehicle_reg_no, "workflow_state": "Approved"},
-            "mileage",
+            ["mileage", "litres"],
             order_by="creation DESC"
         )
 
-        if not previous_vehicle_mileage:
-            previous_vehicle_mileage = frappe.db.get_value("Vehicle", {"name": vehicle_reg_no}, "last_odometer")
+        liters_per_kilometer = 0
 
-        if mileage:
-            fueling_list_doc.mileage = mileage
-            mileage_covered = mileage - previous_vehicle_mileage if previous_vehicle_mileage else 0
-        else:
-            mileage_covered = 0
+        if previous_vehicle_data:
+            prev_mileage, prev_litres = previous_vehicle_data
+            
+            if mileage:
+                fueling_list_doc.mileage = mileage
+                mileage_covered = mileage - prev_mileage if prev_mileage else 0
+                
+
+                if prev_litres and prev_litres > 0:
+                    liters_per_kilometer = mileage_covered / prev_litres
+                else:
+                    liters_per_kilometer = 0
+            else:
+                mileage_covered = 0
 
         if litres:
             fueling_list_doc.litres = litres
         if amount:
             fueling_list_doc.amount = amount
 
-        fueling_list_doc.liters_per_kilometer = mileage_covered / litres if litres else 0
+        fueling_list_doc.liters_per_kilometer = liters_per_kilometer
 
         fueling_list_doc.save(ignore_permissions=True)
         frappe.db.commit()
@@ -513,6 +523,7 @@ def update_fueling_list(**kwargs):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
 
 
 
