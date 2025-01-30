@@ -374,30 +374,59 @@ def validate_otp_exists(usr, otp):
         return False
 
 
-@frappe.whitelist( methods="POST" )
+@frappe.whitelist(methods="POST")
 def create_fueling_list(**kwargs):
     try:
         date = kwargs.get('date')
-        if date:
-            formatted_date = parser.parse(date).strftime("%Y-%m-%d")
-            fueling_list_doc = frappe.get_doc({
-                "doctype": "Fueling List",
-                "date": formatted_date,
-                "vehicle_reg_no": kwargs.get('vehicle_reg_no'),
-                "petrol_station_pos_receipt_no": kwargs.get('petrol_station_pos_receipt_no'),
-                "route": kwargs.get('route'),
-                "mileage": kwargs.get('mileage'),
-                "litres": kwargs.get('litres'),
-                "amount": kwargs.get('amount')
-            })
-            fueling_list_doc.insert(ignore_mandatory=True, ignore_permissions=True)
-            frappe.db.commit()
-            return {'status': 200, 'message': 'Fueling List created successfully.'}
-        else:
+        routes = kwargs.get('routes')
+        vehicle_reg_no = kwargs.get('vehicle_reg_no')
+        mileage = kwargs.get('mileage')
+        litres = kwargs.get('litres')
+        amount = kwargs.get('amount')
+        petrol_station_pos_receipt_no = kwargs.get('petrol_station_pos_receipt_no')
+
+        if not date:
             return {'status': 500, 'message': 'Date is needed.'}
+
+        formatted_date = parser.parse(date).strftime("%Y-%m-%d")
+
+        route_details = [{"route": route['route']} for route in routes]
+
+        previous_vehicle_mileage = frappe.db.get_value(
+            "Fueling List",
+            {"vehicle_reg_no": vehicle_reg_no, "workflow_state": "Approved"},
+            "mileage",
+            order_by="creation DESC"
+        )
+
+        if not previous_vehicle_mileage:
+            previous_vehicle_mileage = frappe.db.get_value("Vehicle", {"name": vehicle_reg_no}, "last_odometer")
+
+        mileage_covered = mileage - previous_vehicle_mileage if previous_vehicle_mileage else 0
+
+        liters_per_kilometer = mileage_covered / litres if litres else 0
+
+        fueling_list_doc = frappe.get_doc({
+            "doctype": "Fueling List",
+            "date": formatted_date,
+            "vehicle_reg_no": vehicle_reg_no,
+            "petrol_station_pos_receipt_no": petrol_station_pos_receipt_no,
+            "route_details": route_details,
+            "mileage": mileage,
+            "litres": litres,
+            "amount": amount,
+            "liters_per_kilometer": liters_per_kilometer
+        })
+        
+        fueling_list_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+        frappe.db.commit()
+
+        return {'status': 200, 'message': 'Fueling List created successfully.'}
+
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
 
 
 
@@ -407,7 +436,7 @@ def get_fueling_list():
 
         fueling_lists = frappe.db.get_all(
             "Fueling List",
-            fields=["date", "vehicle_reg_no", "petrol_station_pos_receipt_no", "route", "mileage", "litres", "amount", "workflow_state as status", "name as fueling_list_name"],
+            fields=["date", "vehicle_reg_no", "petrol_station_pos_receipt_no", "route", "mileage", "litres", "amount", "workflow_state as status", "name as fueling_list_name", "liters_per_kilometer"],
             filters={"workflow_state": ["in", ["Pending Approval", "Draft"]]},
             order_by="modified desc"
         )
@@ -423,33 +452,58 @@ def get_fueling_list():
 
 
 
-@frappe.whitelist( methods="POST" )
+@frappe.whitelist(methods="POST")
 def update_fueling_list(**kwargs):
     try:
         fueling_list_name = kwargs.get('fueling_list_name')
         if not fueling_list_name:
-            return {'status': 400, 'message': 'The "name" field is required to update the Fueling List.'}
-        
+            return {'status': 400, 'message': 'The "fueling_list_name" field is required to update the Fueling List.'}
+
         fueling_list_doc = frappe.get_doc("Fueling List", fueling_list_name)
 
         date = kwargs.get('date')
+        vehicle_reg_no = kwargs.get('vehicle_reg_no')
+        mileage = kwargs.get('mileage')
+        litres = kwargs.get('litres')
+        amount = kwargs.get('amount')
+        petrol_station_pos_receipt_no = kwargs.get('petrol_station_pos_receipt_no')
+        route_details = [{"route": route['route']} for route in kwargs.get('routes', [])]
+
         if date:
             formatted_date = parser.parse(date).strftime("%Y-%m-%d")
-
-        if 'date' in kwargs:
             fueling_list_doc.date = formatted_date
-        if 'vehicle_reg_no' in kwargs:
-            fueling_list_doc.vehicle_reg_no = kwargs.get('vehicle_reg_no')
-        if 'petrol_station_pos_receipt_no' in kwargs:
-            fueling_list_doc.petrol_station_pos_receipt_no = kwargs.get('petrol_station_pos_receipt_no')
-        if 'route' in kwargs:
-            fueling_list_doc.route = kwargs.get('route')
-        if 'mileage' in kwargs:
-            fueling_list_doc.mileage = kwargs.get('mileage')
-        if 'litres' in kwargs:
-            fueling_list_doc.litres = kwargs.get('litres')
-        if 'amount' in kwargs:
-            fueling_list_doc.amount = kwargs.get('amount')
+        
+        if vehicle_reg_no:
+            fueling_list_doc.vehicle_reg_no = vehicle_reg_no
+
+        if petrol_station_pos_receipt_no:
+            fueling_list_doc.petrol_station_pos_receipt_no = petrol_station_pos_receipt_no
+
+        if route_details:
+            fueling_list_doc.route_details = route_details
+
+        previous_vehicle_mileage = frappe.db.get_value(
+            "Fueling List",
+            {"vehicle_reg_no": vehicle_reg_no, "workflow_state": "Approved"},
+            "mileage",
+            order_by="creation DESC"
+        )
+
+        if not previous_vehicle_mileage:
+            previous_vehicle_mileage = frappe.db.get_value("Vehicle", {"name": vehicle_reg_no}, "last_odometer")
+
+        if mileage:
+            fueling_list_doc.mileage = mileage
+            mileage_covered = mileage - previous_vehicle_mileage if previous_vehicle_mileage else 0
+        else:
+            mileage_covered = 0
+
+        if litres:
+            fueling_list_doc.litres = litres
+        if amount:
+            fueling_list_doc.amount = amount
+
+        fueling_list_doc.liters_per_kilometer = mileage_covered / litres if litres else 0
 
         fueling_list_doc.save(ignore_permissions=True)
         frappe.db.commit()
@@ -459,6 +513,7 @@ def update_fueling_list(**kwargs):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
 
 
 @frappe.whitelist( methods="POST" )
@@ -787,7 +842,7 @@ def get_sales_orders():
                 SO.customer AS customer,
                 SO.delivery_date AS delivery_date,
                 SO.rounded_total AS total_amount,
-                SO.status AS status,
+                SO.workflow_state AS status,
                 SOI.item_code AS item_code,
                 SOI.qty AS quantity,
                 SOI.rate AS unit_price,

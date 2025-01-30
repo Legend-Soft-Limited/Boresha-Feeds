@@ -8,11 +8,13 @@
   "date",
   "vehicle_reg_no",
   "petrol_station_pos_receipt_no",
-  "route",
+  "amount",
   "column_break_1htl",
   "mileage",
   "litres",
-  "amount",
+  "liters_per_kilometer",
+  "section_break_ujbe",
+  "routes",
   "amended_from"
  ],
  "fields": [
@@ -36,8 +38,6 @@
   {
    "fieldname": "vehicle_reg_no",
    "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Vehicle Reg No",
    "options": "Vehicle",
    "reqd": 1
@@ -47,16 +47,6 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Petrol Station POS Receipt No",
-   "reqd": 1
-  },
-  {
-   "fieldname": "route",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Route",
-   "options": "Route",
    "reqd": 1
   },
   {
@@ -81,12 +71,30 @@
   {
    "fieldname": "column_break_1htl",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ujbe",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "routes",
+   "fieldtype": "Table",
+   "in_preview": 1,
+   "label": "Routes",
+   "options": "Route Details",
+   "reqd": 1
+  },
+  {
+   "fieldname": "liters_per_kilometer",
+   "fieldtype": "Float",
+   "label": "Litres/ Kilometer",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-25 21:26:13.710471",
+ "modified": "2025-01-30 17:11:26.436700",
  "modified_by": "Administrator",
  "module": "Boresha Feeds",
  "name": "Fueling List",
@@ -108,5 +116,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "vehicle_reg_no"
 }
