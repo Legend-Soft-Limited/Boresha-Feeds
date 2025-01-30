@@ -737,7 +737,10 @@ def check_customer_credit_limit(customer):
             """, (customer,))[0][0] or 0
         
         credit_balance = credit_limit - outstanding_customer_amount
-        return credit_balance
+        if credit_balance:
+            return credit_balance
+        else:
+            return 0
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
 
