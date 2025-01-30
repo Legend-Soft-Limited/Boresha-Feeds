@@ -88,13 +88,14 @@
    "fieldname": "liters_per_kilometer",
    "fieldtype": "Float",
    "label": "Litres/ Kilometer",
+   "precision": "2",
    "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-30 17:11:26.436700",
+ "modified": "2025-01-30 19:27:20.561756",
  "modified_by": "Administrator",
  "module": "Boresha Feeds",
  "name": "Fueling List",
