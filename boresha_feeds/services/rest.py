@@ -1008,3 +1008,76 @@ def confirm_order_receival(**kwargs):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
+
+@frappe.whitelist(methods="POST")
+def create_sales_invoice( **kwargs ):
+    try:
+        sales_invoice_items = kwargs.get('sales_invoice_items')
+        due_date = kwargs.get('due_date')
+        customer = kwargs.get('customer')
+        sales_order_name = kwargs.get('sales_order_name')
+        sales_invoice_name = kwargs.get('sales_invoice_name')
+
+
+        if not due_date:
+            return {'status': 500, 'message': 'Date is needed.'}
+
+        formatted_date = parser.parse(due_date).strftime("%Y-%m-%d")
+
+        sales_invoice_items_details = []
+
+        for sales_invoice_item in sales_invoice_items:
+
+            rate = frappe.db.get_value("Item Price", 
+                {"item_code": sales_invoice_item['item_code'], "price_list": "Standard Selling"}, 
+                "price_list_rate") or 0
+
+            so_detail =  frappe.db.get_value("Sales Order Item", 
+                {"item_code": sales_invoice_item['item_code'], "parent": sales_invoice_name}, 
+                "name")
+
+            sales_invoice_items_details.append({
+                "item_code": sales_invoice_item['item_code'],
+                "sales_order": sales_order_name,
+                "so_detail": so_detail,
+                "qty": sales_invoice_item['quantity'],
+                "rate": rate
+            })
+
+
+        if sales_invoice_name:
+            if frappe.db.exists("Sales Invoice", {"name": sales_invoice_name}):
+                sales_invoice_doc = frappe.get_doc("Sales Invoice", sales_invoice_name)
+                sales_invoice_doc.due_date = formatted_date
+                sales_invoice_doc.customer = customer
+
+                sales_invoice_doc.items = [] 
+
+                for item in sales_invoice_items_details:
+                    sales_invoice_doc.append("items", item)
+
+                sales_invoice_doc.save(ignore_permissions=True)
+                frappe.db.commit()
+
+                return {'status': 200, 'message': 'Sales invoice updated successfully.'}
+            else:
+                return {'status': 404, 'message': 'Sales invoice not found.'}
+
+        else:
+
+            sales_invoice_doc = frappe.get_doc({
+                "doctype": "Sales Invoice",
+                "customer": customer,
+                "due_date": formatted_date,
+                "items": sales_invoice_items_details
+            })
+
+            sales_invoice_doc.insert(ignore_mandatory=True, ignore_permissions=True)
+            frappe.db.commit()
+            return {'status': 200, 'message': 'Sales invoice created successfully.'}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}'}
