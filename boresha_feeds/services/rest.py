@@ -494,6 +494,8 @@ def get_fueling_list():
                     "mileage": row["mileage"],
                     "liters_per_kilometer": row["liters_per_kilometer"],
                     "status": row["status"],
+                    "litres": row["litres"],
+                    "amount": row["amount"],
                     "routes": []
                 }
 
