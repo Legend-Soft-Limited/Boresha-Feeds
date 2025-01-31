@@ -1093,7 +1093,7 @@ def submit_sales_invoice(**kwargs):
             return {'status': 400, 'message': 'Sales Invoice name is required.'}
 
         if frappe.db.exists("Sales Invoice", {"name": sales_invoice_name}):
-            sales_invoice_doc = frappe.get_doc("Sales Invoice", sales_invoice_doc)
+            sales_invoice_doc = frappe.get_doc("Sales Invoice", sales_invoice_name)
             if sales_invoice_doc.docstatus == 1:
                 return {'status': 200, 'message': 'Sales Invoice is already submitted.'}
             sales_invoice_doc.submit()
