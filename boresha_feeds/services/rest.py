@@ -470,6 +470,7 @@ def get_fueling_list():
                 FL.petrol_station_pos_receipt_no AS petrol_station_pos_receipt_no,
                 FL.mileage AS mileage,
                 FL.litres AS litres,
+                FL.amount AS amount,
                 FL.liters_per_kilometer AS liters_per_kilometer,
                 FL.workflow_state AS status,
                 RD.route AS route
