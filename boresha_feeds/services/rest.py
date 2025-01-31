@@ -1081,3 +1081,88 @@ def create_sales_invoice( **kwargs ):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), f"{str(e)}")
         return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
+
+@frappe.whitelist( methods="POST" )
+def submit_sales_invoice(**kwargs):
+    try:
+        sales_invoice_name = kwargs.get('sales_invoice_name')
+
+        if not sales_invoice_name:
+            return {'status': 400, 'message': 'Sales Invoice name is required.'}
+
+        if frappe.db.exists("Sales Invoice", {"name": sales_invoice_name}):
+            sales_invoice_doc = frappe.get_doc("Sales Invoice", sales_invoice_doc)
+            if sales_invoice_doc.docstatus == 1:
+                return {'status': 200, 'message': 'Sales Invoice is already submitted.'}
+            sales_invoice_doc.submit()
+            frappe.db.commit()
+
+            return {'status': 200, 'message': 'Sales Invoice submitted successfully.'}
+
+        else:
+            return {'status': 404, 'message': 'Sales Invoice does not exist'}
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{str(e)}")
+        return {'status': 500, 'message': f'An error occurred: {str(e)}'}
+
+
+
+@frappe.whitelist(methods="GET")
+def get_sales_invoice():
+    try:
+        sales_invoices = {}
+
+        sales_invoice_data = frappe.db.sql("""
+            SELECT
+                SI.name AS sales_invoice_name,
+                SI.customer AS customer,
+                SI.due_date AS due_date,
+                SI.rounded_total AS total_amount,
+                SI.status AS status,
+                SII.item_code AS item_code,
+                SII.qty AS quantity,
+                SII.rate AS unit_price,
+                SII.amount AS amount
+            FROM
+                `tabSales Invoice` SI
+            JOIN
+                `tabSales Invoice Item` SII ON SII.parent = SI.name
+            WHERE
+                SI.docstatus != 2
+        """, as_dict=True)
+
+        for row in sales_invoice_data:
+            sales_invoice_name = row.pop("sales_invoice_name")
+
+            if sales_invoice_name not in sales_invoices:
+                sales_invoices[sales_invoice_name] = {
+                    "customer": row["customer"],
+                    "due_date": row["due_date"],
+                    "total_amount": row["total_amount"],
+                    "status": row["status"],
+                    "items": []
+                }
+
+            sales_invoices[sales_invoice_name]["items"].append({
+                "item_code": row["item_code"],
+                "quantity": row["quantity"],
+                "unit_price": row["unit_price"],
+                "amount": row["amount"]
+            })
+
+        sales_invoice_list = [
+            {"sales_invoice_name": name, **details}
+            for name, details in sales_invoices.items()
+        ]
+
+        return {
+            "status": 200,
+            "sales_invoices": sales_invoice_list
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{e}")
+        return {"error": str(e)}, 400
